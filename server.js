@@ -52,7 +52,7 @@ function start() {
                     break;
 
                 case "Add Department":
-                    addDept();
+                    addDepartment();
                     break;
 
                 case "View all Departments":
@@ -80,7 +80,7 @@ function start() {
 
 function viewAllEmployees() {
 
-    connection.query("SELECT employee.first_name, employee.last_name FROM employee",
+    connection.query("SELECT employee.first_name, employee.last_name from employee",
         function (err, res) {
             if (err) throw err;
             // Log all results of the SELECT statement
@@ -93,15 +93,73 @@ function viewAllDept() {
     connection.query("SELECT * from department", function (err, res) {
         if (err) throw err;
         console.table(res);
-        startUp();
+        start();
     });
 };
 
 
 function viewAllRoles() {
-    connection.query("SELECT * from roles", function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        startUp();
-    });
+    connection.query("SELECT roles.title from roles",
+        function (err, res) {
+            if (err) throw err;
+            console.table(res);
+            start();
+        });
 };
+
+function addEmployee() {
+    //Log entry 
+    console.log("Adding employee name");
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "First Name: ",
+            name: "first_name",
+        },
+        {
+            type: "input",
+            message: "Last Name: ",
+            name: "last_name",
+        },
+        {
+            type: "input",
+            message: "Role ID: ",
+            name: "role_id",
+        }
+    ]).then(
+        function (res) {
+            const query = connection.query(
+                "INSERT INTO employee SET ?",
+                res,
+                function (err, res) {
+                    if (err) throw err;
+                    console.log("Employee has been added");
+                    viewAllEmployees();
+                }
+            );
+        });
+};
+
+function addDepartment() {
+    console.log("Adding Department");
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "New Department: ",
+            name: "name",
+        }
+    ]).then(
+        function (res) {
+            const query = connection.query(
+                "INSERT INTO department SET ?",
+                res,
+                function (err, res) {
+                    if (err) throw err;
+                    console.log("New Department has been added");
+                    viewAllDept();
+                }
+            );
+        });
+
+};
+
