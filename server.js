@@ -6,7 +6,7 @@ var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "USYDAug@",
+    password: "",
     database: "Employee_Tracker"
 });
 
@@ -26,7 +26,6 @@ function start() {
                 choices: [
                     "Add Employee",
                     "View all Employees",
-                    "Remove Employee",
                     "Add Department",
                     "View all Departments",
                     "Add Roles",
@@ -45,10 +44,6 @@ function start() {
 
                 case "View all Employees":
                     viewAllEmployees();
-                    break;
-
-                case "Remove Employee":
-                    removeEmployee();
                     break;
 
                 case "Add Department":
@@ -160,6 +155,88 @@ function addDepartment() {
                 }
             );
         });
-
 };
 
+function addRole() {
+    console.log("Adding Role");
+
+    //Set varable for department to grab list from DB
+    var department = [];
+    connection.query("SELECT * FROM department",
+        function (err, res) {
+            if (err) throw err;
+            for (var i = 0; i < res.length; i++) {
+                res[i].first_name + " " + res[i].last_name
+                department.push({ name: res[i].name, value: res[i].id });
+                //console.log("Updated departments");
+            }
+            inquirer.prompt([
+                {
+                    type: "input",
+                    message: "New role",
+                    name: "title"
+                },
+                {
+                    type: "input",
+                    message: "Role Salary: ",
+                    name: "salary"
+                },
+                {
+                    type: "list",
+                    name: "department",
+                    message: "what department?",
+                    choices: department
+                }
+
+            ]).then(
+                function (res) {
+                    const query = connection.query(
+                        "INSERT INTO roles SET ?",
+                        {
+                            title: res.title,
+                            salary: res.salary,
+                            department_id: res.department
+                        },
+                        function (err, res) {
+                            if (err) throw err;
+                            console.log("New Role has been added");
+                            viewAllRoles();
+                        }
+                    )
+                })
+        })
+}
+
+function updateEmployeeRole() {
+    console.log("Updated Employee Role");
+    var employee = [];
+    connection.query("SELECT first_name, last_name, id FROM employee",
+        function (err, res) {
+            if (err) throw err;
+            for (var i = 0; i < res.length; i++) {
+                res[i].first_name + " " + res[i].last_name + " " + res[i].id
+                employee.push({ name: res[i].first_name + " " + res[i].last_name, value: res[i].id });
+                //console.log("Updated departments");
+            } inquirer
+                .prompt([
+                    {
+                        type: "list",
+                        name: "employeeName",
+                        message: "Select name to update",
+                        choices: employee
+                    },
+                    {
+                        type: "input",
+                        name: "roles",
+                        message: "What is your new role?"
+                    }
+                ]).then(function (res) {
+                    connection.query(`UPDATE employee SET role_id = ${res.roles} WHERE id = ${res.employeeName}`,
+                        function (err, res) {
+                            console.log(res);
+                            start()
+                        })
+                }
+                );
+        })
+}
